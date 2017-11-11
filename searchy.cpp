@@ -171,6 +171,46 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////////
+class IntSetBitVect : public IntSet
+{
+private:
+    enum { BITSPERWORD = 32, SHIFT = 5, MASK = 0x1F};
+    int n, hi, *x;
+    void set(int i) { x[i>>SHIFT] |= (1<<(i & MASK)); }
+    void clr(int i) { x[i>>SHIFT] &= ~(1 << (i & MASK)); }
+    bool test(int i) { return x[i>>SHIFT] & (1<<(i&MASK)); }
+public:
+    IntSetBitVect(int maxelements, int maxval)
+    {
+        hi = maxval;
+        x = new int[1 + hi / BITSPERWORD];
+        for (int i = 0; i < hi; ++i)
+            clr(i);
+        n = 0;
+    }
+    int size() override
+    {
+        return n;
+    }
+    void insert(int t) override
+    {
+        if (test(t))
+            return;
+        set(t);
+        n++;
+    }
+    void report(int *v) override
+    {
+        int j = 0;
+        for (int i = 0; i < hi; ++i)
+        {
+            if (test(i))
+                v[j++] = i;
+        }
+    }
+};
+
+//////////////////////////////////////////////////////////////////////////////
 
 void gensets(int m, int maxval)
 {
@@ -179,7 +219,8 @@ void gensets(int m, int maxval)
     //IntSetSTL S(m, maxval);
     //IntSetArray S(m, maxval);
     //IntSetList S(m, maxval);
-    IntSetBST S(m, maxval);
+    //IntSetBST S(m, maxval);
+    IntSetBitVect S(m, maxval);
     while (S.size() < m)
         S.insert(rand() % maxval);
     S.report(v);
